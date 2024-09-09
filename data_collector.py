@@ -9,5 +9,8 @@ class DataCollector():
     def set_tickers(self, new_tickers):
         self.tickers = new_tickers
 
-    def download_data(self):
-        self.raw_data = None
+    def download_data(self, start, end, interval):
+        self.raw_data = yf.download(self.tickers, start, end, interval)
+
+    def get_raw_data(self):
+        return self.raw_data
