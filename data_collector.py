@@ -3,8 +3,7 @@ import yfinance as yf
 
 class DataCollector():
     def __init__(self) -> None:
-        self.tickers = None
-        self.raw_data = None
+        pass
 
     def set_tickers(self, new_tickers):
         self.tickers = new_tickers
