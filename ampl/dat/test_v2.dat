@@ -1,0 +1,18 @@
+param I := 3;
+param J := 5;
+
+param p :=
+    1  0.2
+    2  0.3
+    3  0.5
+;
+
+param R : 1 2 3 4 5 :=
+    1  -0.2   -0.3  -1.2  -0.2  -0.5
+    2  -0.1   -0.4  -1    -0.1  -0.5
+    3  -0.15  -0.2  -0.1  -1.2  -0.5
+; 
+
+param tau := 0.05; # tau przyjmuje wartości z przedziału (0, 0.5];
+
+param w_limit := 0.3;
