@@ -1,11 +1,13 @@
 # # Line below has to be run only once
 # install.packages("copula")
 # install.packages("plotly")
-install.packages("MASS")
+# install.packages("MASS")
+# install.packages("ks")
 
 library(copula)
 library(plotly)
 library(MASS)
+library(ks)
 
 return_rates = read.csv("data/positive_quarterly_return_rates.csv")
 
@@ -33,20 +35,15 @@ theta = coef(fit)
 
 
 simulated_data <- rCopula(1000, claytonCopula(theta, dim))
+# head(simulated_data)
 
 # first two stocks -> countour plot
 plot(simulated_data[,1], simulated_data[,2], main="Simulated Clayton Copula Data",
      xlab="Stock 1", ylab="Stock 2")
 
 
-fig = plot_ly(x = simulated_data[,1], y = simulated_data[,2], z = kde2d(simulated_data[,1], simulated_data[,2])$z,
-              type = "scatter3d", mode = "markers",
-              marker = list(size = 3, color = kde2d(simulated_data[,1], simulated_data[,2])$z, colorscale = 'Viridis'))
 
 
-fig = fig %>% layout(scene = list(xaxis = list(title = "Stock 1 Returns"),
-                                   yaxis = list(title = "Stock 2 Returns"),
-                                   zaxis = list(title = "Density")),
-                      title = "3D Density Plot of Stock Returns (Clayton Copula)")
 
-fig
+
+
