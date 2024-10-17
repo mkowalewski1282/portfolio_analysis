@@ -54,13 +54,18 @@ class PortfolioOptimization:
         for j in range(self._number_of_instruments):
             self.model.add_constraint(w[j] <= self.maximum_weight)
 
-    def solve(self):
+    def solve(self, verbose=True):
         self._solution = self.model.solve()
-        if self._solution:
-            print(f"Objective value (EVaR): {self.model.get_var_by_name('y').solution_value}")
-            print("Weights (w):", [self.model.get_var_by_name(f'w_{j}').solution_value for j in range(self._number_of_instruments)])
-        else:
-            print("No solution found")
+        if verbose:
+            if self._solution:
+                print(f"Objective value (EVaR): {self.model.get_var_by_name('y').solution_value}")
+                print("Weights (w):", [self.model.get_var_by_name(f'w_{j}').solution_value for j in range(self._number_of_instruments)])
+            else:
+                print("No solution found")
 
-    def get_solution(self):
-        return self._solution
+    def get_solution_weights(self):
+        return [self.model.get_var_by_name(f'w_{j}').solution_value for j in range(self._number_of_instruments)]
+
+    def get_solution_evar(self):
+        return self.model.get_var_by_name('y').solution_value
+
