@@ -20,12 +20,14 @@ class PortfolioOptimization:
         self.maximum_weight = maximum_weight
 
     def load_data_from_csv(self, filepath):
-        data = pd.read_csv(filepath, index_col=0, parse_dates=True)
+        self.data = pd.read_csv(filepath, index_col=0, parse_dates=True)
 
-        self._number_of_scenarios = data.shape[0]   # number of rows
-        self._number_of_instruments = data.shape[1] # number of columns
+    def slice_windows(self, number_of_quarters, start_quarter_index = 0):
+        sliced_data = self.data.iloc[start_quarter_index:start_quarter_index + number_of_quarters]
+        self._number_of_scenarios = sliced_data.shape[0]   # number of rows
+        self._number_of_instruments = sliced_data.shape[1] # number of columns
 
-        self.R = data.values                                                # Scenarios as rows, instruments as columns
+        self.R = sliced_data.values                                                # Scenarios as rows, instruments as columns
         self.p = [1/self._number_of_scenarios] * self._number_of_scenarios  # Equal probabilities for each scenario
 
     def build_model(self):
@@ -68,4 +70,20 @@ class PortfolioOptimization:
 
     def get_solution_evar(self):
         return self.model.get_var_by_name('y').solution_value
+
+    def optimize_windows(self, number_of_quarters):
+        output_df = pd.DataFrame()
+        for start_index in range(len(self.data) - number_of_quarters):
+            self.slice_windows(number_of_quarters, start_index)
+            self.build_model()
+            self.solve()
+            weights = self.get_solution_weights()
+            evar = self.get_solution_evar()
+            output_df["Start"] = self.data.iloc[0, 0]
+            output_df["End"] = self.data.iloc[0, -1]
+            output_df["Number of quarters"] = number_of_quarters
+            output_df["EVAR"] = evar
+            for index, weight in iter(weights):
+                output_df[f"w{index}"] = weight
+        return output_df
 
