@@ -1,5 +1,6 @@
 from docplex.mp.model import Model
 import pandas as pd
+import numpy as np
 
 
 class PortfolioOptimization:
@@ -38,7 +39,7 @@ class PortfolioOptimization:
 
     def build_model(self):
         w = self.model.continuous_var_list(self._number_of_instruments, lb=0, name="w")  # weights, w[j] >= 0    # type: ignore
-        y = self.model.continuous_var(name="y")                                          # unbounded y variable
+        y = self.model.continuous_var(lb= -np.inf, name="y")                                          # unbounded y variable
         u = self.model.continuous_var_list(self._number_of_scenarios, lb=0, name="u")    # u[i] >= 0             # type: ignore
         v = self.model.continuous_var_list(self._number_of_scenarios, lb=0, name="v")    # v[i] >= 0             # type: ignore
 
