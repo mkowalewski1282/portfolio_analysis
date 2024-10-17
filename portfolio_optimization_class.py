@@ -100,8 +100,8 @@ def optimize_windows(number_of_quarters, tau, maximum_weight, data_path, verbose
         optimizer.solve(verbose=verbose)
         weights = optimizer.get_solution_weights()
         evar = optimizer.get_solution_evar()
-        starts.append(optimizer.data.index[0])
-        ends.append(optimizer.data.index[-1])
+        starts.append(optimizer.sliced_data.index[0])
+        ends.append(optimizer.sliced_data.index[-1])
         quarter_numbers.append(number_of_quarters)
         evars.append(evar)
         weight_index = 0
