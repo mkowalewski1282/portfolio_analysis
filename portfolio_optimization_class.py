@@ -22,12 +22,18 @@ class PortfolioOptimization:
     def load_data_from_csv(self, filepath):
         self.data = pd.read_csv(filepath, index_col=0, parse_dates=True)
 
-    def slice_windows(self, number_of_quarters, start_quarter_index = 0):
-        sliced_data = self.data.iloc[start_quarter_index:start_quarter_index + number_of_quarters]
-        self._number_of_scenarios = sliced_data.shape[0]   # number of rows
-        self._number_of_instruments = sliced_data.shape[1] # number of columns
+    def set_data(self, new_data):
+        self.data = new_data
 
-        self.R = sliced_data.values                                                # Scenarios as rows, instruments as columns
+    def get_whole_data_length(self):
+        return len(self.data)
+
+    def slice_windows(self, number_of_quarters, start_quarter_index = 0):
+        self.sliced_data = self.data.iloc[start_quarter_index:start_quarter_index + number_of_quarters]
+        self._number_of_scenarios = self.sliced_data.shape[0]   # number of rows
+        self._number_of_instruments = self.sliced_data.shape[1] # number of columns
+
+        self.R = self.sliced_data.values                                                # Scenarios as rows, instruments as columns
         self.p = [1/self._number_of_scenarios] * self._number_of_scenarios  # Equal probabilities for each scenario
 
     def build_model(self):
@@ -71,19 +77,47 @@ class PortfolioOptimization:
     def get_solution_evar(self):
         return self.model.get_var_by_name('y').solution_value
 
-    def optimize_windows(self, number_of_quarters):
-        output_df = pd.DataFrame()
-        for start_index in range(len(self.data) - number_of_quarters):
-            self.slice_windows(number_of_quarters, start_index)
-            self.build_model()
-            self.solve()
-            weights = self.get_solution_weights()
-            evar = self.get_solution_evar()
-            output_df["Start"] = self.data.iloc[0, 0]
-            output_df["End"] = self.data.iloc[0, -1]
-            output_df["Number of quarters"] = number_of_quarters
-            output_df["EVAR"] = evar
-            for index, weight in iter(weights):
-                output_df[f"w{index}"] = weight
-        return output_df
+
+def optimize_windows(number_of_quarters, tau, maximum_weight, data_path, verbose = False):
+    data = pd.read_csv(data_path, index_col=0, parse_dates=True)
+    data_length = len(data)
+    output_df = pd.DataFrame()
+    starts = []
+    ends = []
+    quarter_numbers = []
+    evars = []
+    stocks_number = len(data.columns)
+    weights_lists = [[] for i in range(stocks_number)]
+    for start_index in range(data_length - number_of_quarters):
+        # print(start_index)
+        optimizer = PortfolioOptimization()
+        optimizer.set_tau(tau)
+        optimizer.set_maximum_weight(maximum_weight)
+        optimizer.set_data(data)
+        # print(data)
+        optimizer.slice_windows(number_of_quarters, start_index)
+        optimizer.build_model()
+        optimizer.solve(verbose=verbose)
+        weights = optimizer.get_solution_weights()
+        evar = optimizer.get_solution_evar()
+        starts.append(optimizer.data.index[0])
+        ends.append(optimizer.data.index[-1])
+        quarter_numbers.append(number_of_quarters)
+        evars.append(evar)
+        weight_index = 0
+        for weight in weights:
+            weights_lists[weight_index].append(weight)
+            weight_index += 1
+
+    output_df["Start"] = starts
+    output_df["End"] = ends
+    output_df["Number of quarters"] = quarter_numbers
+    output_df["EVAR"] = evars
+    index = 0
+    for weights in weights_lists:
+        # print(index)
+        output_df[f"w{index}"] = weights
+        index += 1
+
+    return output_df
 
