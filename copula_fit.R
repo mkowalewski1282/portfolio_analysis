@@ -3,11 +3,14 @@
 # install.packages("plotly")
 # install.packages("MASS")
 # install.packages("ks")
+# install.packages("QRM")
 
 library(copula)
 library(plotly)
 library(MASS)
 library(ks)
+library(QRM)
+library(Matrix) 
 
 return_rates = read.csv("data/positive_quarterly_return_rates.csv")
 stocks = colnames(return_rates)[2:ncol(return_rates)]
@@ -58,5 +61,55 @@ plot(simulated_data_gaussian[,1], simulated_data_gaussian[,2],
 
 
 write.csv(simulated_data_gaussian, file = "data/copulas_outputs/simulated_gaussian_all_stocks.csv", row.names = FALSE)
+
+
+###### t - STUDENT COPULA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
