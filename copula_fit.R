@@ -26,6 +26,19 @@ pseudo_obs = apply(return_rates[stocks], 2, function(x) rank(x)/(length(x)+1))
 dim = ncol(pseudo_obs) 
 
 
+plot_density <- function(simulated_data) {
+  x <- simulated_data[, 1]
+  y <- simulated_data[, 2]
+  density_estimate <- kde2d(x, y, n = 50)
+  par(mfrow = c(1, 2))  # layout
+  image(density_estimate, main = "2D Density Plot")
+  contour(density_estimate, add = TRUE) # image with contour overlay
+  persp(density_estimate$x, density_estimate$y, density_estimate$z,
+        theta = 30, phi = 20, expand = 0.5, col = "lightblue",
+        xlab = "X", ylab = "Y", zlab = "Density", main = "3D Density Plot")
+  par(mfrow = c(1, 1))
+}
+
 
 ###### CLAYTON
 clayton_cop = claytonCopula(dim=dim)
@@ -43,17 +56,7 @@ colnames(simulated_data_clayton) = stocks
 plot(simulated_data_clayton[,1], simulated_data_clayton[,2], main="Simulated Clayton Copula Data",
      xlab="Stock 1", ylab="Stock 2")
 
-x = simulated_data_clayton[, 1]
-y = simulated_data_clayton[, 2]
-
-
-density_estimate <- kde2d(x, y, n = 50)  # n specifies the resolution of the density grid
-
-image(density_estimate, main = "2D Density Plot")
-contour(density_estimate, add = TRUE)
-persp(density_estimate$x, density_estimate$y, density_estimate$z,
-      theta = 30, phi = 20, expand = 0.5, col = "lightblue",
-      xlab = "X", ylab = "Y", zlab = "Density", main = "3D Density Plot")
+plot_density(simulated_data_clayton)
 
 
 write.csv(simulated_data_clayton, file = "data/copulas_outputs/simulated_clayton_random_22_stocks.csv", row.names = FALSE)
@@ -66,7 +69,7 @@ fit_gaussian = fitCopula(gaussian_cop, pseudo_obs, method = "ml")  # Maximum Lik
 
 rho = coef(fit_gaussian)
 
-simulated_data_gaussian <- rCopula(1000, normalCopula(rho, dim, dispstr = "un"))
+simulated_data_gaussian <- rCopula(100000, normalCopula(rho, dim, dispstr = "un"))
 colnames(simulated_data_gaussian) = stocks
 
 # Plot Gaussian copula simulation for the first two stocks
@@ -74,12 +77,48 @@ plot(simulated_data_gaussian[,1], simulated_data_gaussian[,2],
      main = "Simulated Gaussian Copula Data",
      xlab = "Stock 1", ylab = "Stock 2")
 
+plot_density(simulated_data_gaussian)
 
-write.csv(simulated_data_gaussian, file = "data/copulas_outputs/simulated_gaussian_all_stocks.csv", row.names = FALSE)
+
+write.csv(simulated_data_gaussian, file = "data/copulas_outputs/simulated_gaussian_22_stocks.csv", row.names = FALSE)
 
 
 ###### t - STUDENT COPULA
 
+library(QRM)
+# Set degrees of freedom and initialize correlation parameters
+df <- 4  # Set the degrees of freedom for the t-Student copula
+cor_matrix <- diag(1, dim)  # Start with an identity matrix
+cor_matrix[lower.tri(cor_matrix)] <- 0.5  # Example initial value for off-diagonal correlations
+
+# Extract the lower triangular values for unstructured "un" copula
+rho_vector <- cor_matrix[lower.tri(cor_matrix)]
+
+# Define the t-Student copula with the extracted correlation vector
+t_cop <- tCopula(param = rho_vector, dim = dim, df = df, dispstr = "un")
+
+# Fit the t-Student copula to the pseudo-observations
+fit_t <- fitCopula(t_cop, pseudo_obs, method = "ml")
+
+# Extract fitted parameters and degrees of freedom
+params_t <- coef(fit_t)
+rho_t <- params_t[1:(length(params_t)-1)]  # Extract correlation parameters
+df_t <- params_t[length(params_t)]          # Degrees of freedom
+
+# Simulate data from the fitted t-Student copula
+simulated_data_t <- rCopula(100000, tCopula(rho_t, dim, df = df_t, dispstr = "un"))
+colnames(simulated_data_t) <- stocks
+
+# Plot the simulated data for the first two stocks
+plot(simulated_data_t[,1], simulated_data_t[,2],
+     main = "Simulated t-Student Copula Data",
+     xlab = "Stock 1", ylab = "Stock 2")
+
+# Use the plot_density function to create density plots
+plot_density(simulated_data_t)
+
+# Write the simulated data to a CSV file
+write.csv(simulated_data_t, file = "data/copulas_outputs/simulated_t_student_22_stocks.csv", row.names = FALSE)
 
 
 
