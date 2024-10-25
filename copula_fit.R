@@ -12,13 +12,15 @@ library(ks)
 library(QRM)
 library(Matrix) 
 
-return_rates = read.csv("data/positive_quarterly_return_rates.csv")
+# file = "data/positive_quarterly_return_rates.csv"
+file = "data/random_data/n_stocks_per_sector.csv"
+return_rates = read.csv(file)
 stocks = colnames(return_rates)[2:ncol(return_rates)]
 
 ecdf_list = lapply(return_rates[stocks], ecdf)
 
 ## example plot
-plot(ecdf(return_rates$AAPL), main="ECDF of AAPL", xlab="Return", ylab="ECDF")
+plot(ecdf(return_rates$MSFT), main="ECDF of MSFT", xlab="Return", ylab="ECDF")
 
 pseudo_obs = apply(return_rates[stocks], 2, function(x) rank(x)/(length(x)+1))
 dim = ncol(pseudo_obs) 
@@ -33,7 +35,7 @@ clayton_fit = fitCopula(clayton_cop, pseudo_obs, method="ml")   # maximum likeli
 theta = coef(clayton_fit)
 # print(theta)
 
-simulated_data_clayton = rCopula(1000, claytonCopula(theta, dim))
+simulated_data_clayton = rCopula(100000, claytonCopula(theta, dim))
 colnames(simulated_data_clayton) = stocks
 # head(simulated_data)
 
@@ -41,7 +43,20 @@ colnames(simulated_data_clayton) = stocks
 plot(simulated_data_clayton[,1], simulated_data_clayton[,2], main="Simulated Clayton Copula Data",
      xlab="Stock 1", ylab="Stock 2")
 
-write.csv(simulated_data_clayton, file = "data/copulas_outputs/simulated_clayton_all_stocks.csv", row.names = FALSE)
+x = simulated_data_clayton[, 1]
+y = simulated_data_clayton[, 2]
+
+
+density_estimate <- kde2d(x, y, n = 50)  # n specifies the resolution of the density grid
+
+image(density_estimate, main = "2D Density Plot")
+contour(density_estimate, add = TRUE)
+persp(density_estimate$x, density_estimate$y, density_estimate$z,
+      theta = 30, phi = 20, expand = 0.5, col = "lightblue",
+      xlab = "X", ylab = "Y", zlab = "Density", main = "3D Density Plot")
+
+
+write.csv(simulated_data_clayton, file = "data/copulas_outputs/simulated_clayton_random_22_stocks.csv", row.names = FALSE)
 
 
 ###### GAUSSIAN COPULA
