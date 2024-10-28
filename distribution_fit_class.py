@@ -37,8 +37,49 @@ class DistributionFit():
         cdf_upper_bound = dist_cdf(upper_bound)
         return (dist_cdf(x) - cdf_lower_bound) / (cdf_upper_bound - cdf_lower_bound)
 
+    def truncated_quantile(self, q, dist_ppf, dist_cdf, lower_bound, upper_bound):
+        """
+        Compute the quantile for a truncated distribution at the given probability q.
+
+        Parameters:
+        q: The quantile level (between 0 and 1).
+        dist_ppf: The PPF (percent-point function) or inverse CDF of the untruncated distribution.
+        dist_cdf: The CDF of the untruncated distribution.
+        lower_bound: Lower truncation limit.
+        upper_bound: Upper truncation limit.
+
+        Returns:
+        Quantile value at the specified probability q for the truncated distribution.
+        """
+        cdf_lower_bound = dist_cdf(lower_bound)
+        cdf_upper_bound = dist_cdf(upper_bound)
+
+        # Adjusted quantile for the truncated distribution
+        adjusted_q = q * (cdf_upper_bound - cdf_lower_bound) + cdf_lower_bound
+        return dist_ppf(adjusted_q)
+
     def get_truncated_boundaries(self, stock_returns):
         return stock_returns.min(), stock_returns.max()
+
+    def get_truncated_quantile_normal_dist(self, quantile, stock):
+        stock_returns = self.get_data()[stock]
+        lower_bound, upper_bound = self.get_truncated_boundaries(stock_returns)
+        normal_params = self.fitted_params[stock]["normal"]
+        mean, std = normal_params
+        return self.truncated_quantile(quantile,
+                                    lambda q: stats.norm.ppf(q, loc=mean, scale=std),
+                                    lambda x: stats.norm.cdf(x, loc=mean, scale=std),
+                                    lower_bound, upper_bound)
+
+    def get_truncated_quantile_t_dist(self, quantile, stock):
+        stock_returns = self.get_data()[stock]
+        lower_bound, upper_bound = self.get_truncated_boundaries(stock_returns)
+        t_params = self.fitted_params[stock]["t-student"]
+        df, loc, scale = t_params
+        return self.truncated_quantile(quantile,
+                                    lambda q: stats.t.ppf(q, df, loc=loc, scale=scale),
+                                    lambda x: stats.t.cdf(x, df, loc=loc, scale=scale),
+                                    lower_bound, upper_bound)
 
     def truncated_pdf(self, x, dist_pdf, dist_cdf, lower_bound, upper_bound):
         """
