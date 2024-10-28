@@ -81,6 +81,53 @@ class DistributionFit():
                                     lambda x: stats.t.cdf(x, df, loc=loc, scale=scale),
                                     lower_bound, upper_bound)
 
+    def load_simulated_data_from_csv(self, file_path):
+        self.simulated_data = pd.read_csv(file_path)
+
+    # def calculate_returns_from_simulated_quantiles(self):
+    #     output_norm = pd.DataFrame(columns=self.get_data().columns)
+    #     output_t_student = pd.DataFrame(columns=self.get_data().columns)
+    #     for stock in self.simulated_data.columns:
+    #         for i, quantile in enumerate(self.simulated_data[stock]):
+    #             normal_return = self.get_truncated_quantile_normal_dist(quantile, stock)
+    #             t_return = self.get_truncated_quantile_t_dist(quantile, stock)
+    #             output_norm.at[i, stock] = normal_return
+    #             output_t_student.at[i, stock] = t_return
+    #     self.simulated_return_norm = output_norm
+    #     self.simulated_return_t_student = output_t_student
+
+    def calculate_returns_from_simulated_quantiles(self):
+        output_norm = pd.DataFrame(columns=self.get_data().columns, index=self.simulated_data.index)
+        output_t_student = pd.DataFrame(columns=self.get_data().columns, index=self.simulated_data.index)
+
+        for stock in self.simulated_data.columns:
+            normal_params = self.fitted_params[stock]["normal"]
+            t_params = self.fitted_params[stock]["t-student"]
+            mean, std = normal_params
+            df, loc, scale = t_params
+            stock_returns = self.get_data()[stock]
+            lower_bound, upper_bound = self.get_truncated_boundaries(stock_returns)
+
+            cdf_lower_bound = stats.norm.cdf(lower_bound, loc=mean, scale=std)
+            cdf_upper_bound = stats.norm.cdf(upper_bound, loc=mean, scale=std)
+            normal_adjusted_q = self.simulated_data[stock] * (cdf_upper_bound - cdf_lower_bound) + cdf_lower_bound
+            normal_returns = stats.norm.ppf(normal_adjusted_q, loc=mean, scale=std)
+            output_norm[stock] = normal_returns
+
+            cdf_lower_bound_t = stats.t.cdf(lower_bound, df, loc=loc, scale=scale)
+            cdf_upper_bound_t = stats.t.cdf(upper_bound, df, loc=loc, scale=scale)
+            t_adjusted_q = self.simulated_data[stock] * (cdf_upper_bound_t - cdf_lower_bound_t) + cdf_lower_bound_t
+            t_returns = stats.t.ppf(t_adjusted_q, df, loc=loc, scale=scale)
+            output_t_student[stock] = t_returns
+        self.simulated_return_norm = output_norm
+        self.simulated_return_t_student = output_t_student
+
+    def get_simulated_return_norm(self):
+        return self.simulated_return_norm
+
+    def get_simulated_return_t_student(self):
+        return self.simulated_return_t_student
+
     def truncated_pdf(self, x, dist_pdf, dist_cdf, lower_bound, upper_bound):
         """
         Compute the truncated PDF for a given distribution in the interval [lower_bound, upper_bound].
