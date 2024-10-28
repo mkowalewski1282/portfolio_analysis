@@ -123,6 +123,50 @@ write.csv(simulated_data_t, file = "data/copulas_outputs/simulated_t_student_22_
 
 
 
+window_length = 32
+for(i in 0:(nrow(return_rates) - window_length)){
+  library(copula)
+  print(i)
+  return_rates_8_years = return_rates[(1+i):(window_length+i),]
+  stocks = colnames(return_rates_8_years)[2:ncol(return_rates_8_years)]
+  ecdf_list = lapply(return_rates_8_years[stocks], ecdf)
+  pseudo_obs_8_years = apply(return_rates_8_years[stocks], 2, function(x) rank(x)/(length(x)+1))
+  dim_8_years = ncol(pseudo_obs_8_years) 
+  
+  clayton_cop_8_years = claytonCopula(dim=dim_8_years)
+  clayton_fit_8_years = fitCopula(clayton_cop_8_years, pseudo_obs_8_years, method="ml")   # maximum likelihood estimation (ml)
+  theta_8_years = coef(clayton_fit_8_years)
+  simulated_data_clayton_8_years = rCopula(100000, claytonCopula(theta_8_years, dim_8_years))
+  colnames(simulated_data_clayton_8_years) = stocks
+  file_name = paste0("data/copulas_outputs/simulated_clayton_random_22_stocks_", i, "_window.csv")
+  write.csv(simulated_data_clayton_8_years, file = file_name, row.names = FALSE)
+  
+  gaussian_cop_8_years = normalCopula(dim = dim_8_years, dispstr = "un")  # Use "un" for an unstructured copula
+  init_params <- rep(0, length = dim_8_years * (dim_8_years - 1) / 2)
+  fit_gaussian_8_years = fitCopula(gaussian_cop_8_years, pseudo_obs_8_years, method = "ml", start = init_params)  # Maximum Likelihood Estimation
+  rho_8_years = coef(fit_gaussian_8_years)
+  simulated_data_gaussian_8_years <- rCopula(100000, normalCopula(rho_8_years, dim_8_years, dispstr = "un"))
+  colnames(simulated_data_gaussian_8_years) = stocks
+  file_name = paste0("data/copulas_outputs/simulated_gaussian_22_stocks_", i, "_window.csv")
+  write.csv(simulated_data_gaussian_8_years, file = file_name, row.names = FALSE)
+  
+  library(QRM)
+  df_8_years <- 4  
+  cor_matrix_8_years <- diag(1, dim_8_years)  
+  cor_matrix_8_years[lower.tri(cor_matrix_8_years)] <- 0.5  
+  rho_vector_8_years <- cor_matrix_8_years[lower.tri(cor_matrix_8_years)]
+  t_cop_8_years <- tCopula(param = rho_vector_8_years, dim = dim_8_years, df = df_8_years, dispstr = "un")
+  fit_t_8_years <- fitCopula(t_cop_8_years, pseudo_obs_8_years, method = "ml")
+  params_t_8_years <- coef(fit_t_8_years)
+  rho_t_8_years <- params_t_8_years[1:(length(params_t_8_years)-1)]  
+  df_t_8_years <- params_t_8_years[length(params_t_8_years)]          
+  simulated_data_t_8_years <- rCopula(100000, tCopula(rho_t_8_years, dim_8_years, df = df_t_8_years, dispstr = "un"))
+  colnames(simulated_data_t_8_years) <- stocks
+  file_name = paste0("data/copulas_outputs/simulated_t_student_22_stocks_", i, "_window.csv")
+  write.csv(simulated_data_t, file = file_name, row.names = FALSE)
+  
+}
+  
 
 
 
