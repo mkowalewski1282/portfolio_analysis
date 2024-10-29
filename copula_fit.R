@@ -156,7 +156,8 @@ for(i in 0:(nrow(return_rates) - window_length)){
   cor_matrix_8_years[lower.tri(cor_matrix_8_years)] <- 0.5  
   rho_vector_8_years <- cor_matrix_8_years[lower.tri(cor_matrix_8_years)]
   t_cop_8_years <- tCopula(param = rho_vector_8_years, dim = dim_8_years, df = df_8_years, dispstr = "un")
-  fit_t_8_years <- fitCopula(t_cop_8_years, pseudo_obs_8_years, method = "ml")
+  init_params <- c(rep(0, length = dim_8_years * (dim_8_years - 1) / 2), 4) # Correlations set to 0, df set to 4
+  fit_t_8_years <- fitCopula(t_cop_8_years, pseudo_obs_8_years, method = "ml", start = init_params)
   params_t_8_years <- coef(fit_t_8_years)
   rho_t_8_years <- params_t_8_years[1:(length(params_t_8_years)-1)]  
   df_t_8_years <- params_t_8_years[length(params_t_8_years)]          
