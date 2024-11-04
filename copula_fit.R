@@ -31,11 +31,12 @@ plot_density <- function(simulated_data) {
   y <- simulated_data[, 2]
   density_estimate <- kde2d(x, y, n = 50)
   par(mfrow = c(1, 2))  # layout
-  image(density_estimate, main = "2D Density Plot")
+  image(density_estimate, main = "2D Density Plot", xlab = "Stock 1", ylab = "Stock 2")
   contour(density_estimate, add = TRUE) # image with contour overlay
   persp(density_estimate$x, density_estimate$y, density_estimate$z,
         theta = 30, phi = 20, expand = 0.5, col = "lightblue",
-        xlab = "X", ylab = "Y", zlab = "Density", main = "3D Density Plot")
+        xlab = "Stock 1", ylab = "Stock 2", zlab = "Density", main = "3D Density Plot",
+        ticktype = "detailed", axes = TRUE)
   par(mfrow = c(1, 1))
 }
 
