@@ -162,6 +162,13 @@ class DistributionFit():
         plt.figure(figsize=(10, 6))
         plt.hist(stock_returns, bins='auto', density=True, alpha=0.6, color='g', label="Return Data")
 
+        title_to_add = ""
+        if with_not_truncated:
+            x = np.linspace(-1, 2, 100)
+            plt.plot(x, stats.norm.pdf(x, *normal_params), 'y-', lw=2, label='Normal Fit')
+            plt.plot(x, stats.t.pdf(x, *t_params), 'g-', lw=2, label='t-Student Fit')
+            title_to_add = ". Not truncated PDFs added."
+
         lower_bound, upper_bound = self.get_truncated_boundaries(stock_returns)
         x = np.linspace(lower_bound, upper_bound, 100)
         # Truncated PDF for Normal distribution
@@ -170,11 +177,13 @@ class DistributionFit():
         plt.plot(x, self.truncated_pdf(x, lambda x: stats.t.pdf(x, *t_params), lambda x: stats.t.cdf(x, *t_params), lower_bound, upper_bound), 'b-', lw=2, label='Truncated t-Student PDF')
         title = f"Truncated PDFs for {stock} in range [{lower_bound}, {upper_bound}]"
 
-        if with_not_truncated:
-            x = np.linspace(-1, 2, 100)
-            plt.plot(x, stats.norm.pdf(x, *normal_params), 'y-', lw=2, label='Normal Fit')
-            plt.plot(x, stats.t.pdf(x, *t_params), 'g-', lw=2, label='t-Student Fit')
-            title += ". Not truncated PDFs added."
+        # if with_not_truncated:
+        #     x = np.linspace(-1, 2, 100)
+        #     plt.plot(x, stats.norm.pdf(x, *normal_params), 'y-', lw=2, label='Normal Fit')
+        #     plt.plot(x, stats.t.pdf(x, *t_params), 'g-', lw=2, label='t-Student Fit')
+        title += title_to_add
+        plt.xlabel("Returns")
+        plt.ylabel("Density")
         plt.title(title)
         plt.legend()
         plt.show()
