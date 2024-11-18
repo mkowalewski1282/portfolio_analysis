@@ -148,6 +148,50 @@ class DistributionFit():
 
         return pdf_x / (cdf_upper_bound - cdf_lower_bound)
 
+    def fit_multivariate_distributions(self, degrees_of_freedom):
+        data = self.data.dropna()  # Drop rows with missing values for multivariate fitting
+        mean_vector = data.mean().values
+        covariance_matrix = data.cov().values
+
+        # Multivariate Normal
+        mvn_params = {
+            "mean": mean_vector,
+            "covariance": covariance_matrix
+        }
+        # Fit Multivariate t-Student
+        t_params = {
+            "mean": mean_vector,
+            "covariance": covariance_matrix,
+            "df": degrees_of_freedom
+        }
+
+        self.multivariate_fitted_params = {
+            "multivariate_normal": mvn_params,
+            "multivariate_t-student": t_params
+        }
+
+    def get_multivariate_fitted_params(self):
+        return self.multivariate_fitted_params
+
+    def generate_multivariate_normal_samples(self, n):
+        params = self.multivariate_fitted_params["multivariate_normal"]
+        mean = params["mean"]
+        covariance = params["covariance"]
+        samples = np.random.multivariate_normal(mean, covariance, size=n)
+        return samples
+
+    def generate_multivariate_t_samples(self, n):
+        params = self.multivariate_fitted_params["multivariate_t-student"]
+        mean = params["mean"]
+        covariance = params["covariance"]
+        df = params["df"]  # degrees of freedom
+
+        d = len(mean)  # Dimensionality
+        g = np.random.gamma(df / 2., 2. / df, size=n)  # Gamma distribution samples for scaling
+        z = np.random.multivariate_normal(np.zeros(d), covariance, size=n)  # Multivariate normal samples
+        samples = mean + z / np.sqrt(g)[:, None]  # Scale the samples to create t-distribution samples
+        return samples
+
     def plot_fitted_distributions(self, stock, stock_returns, normal_params, t_params):
         plt.figure(figsize=(10, 6))
         plt.hist(stock_returns, bins='auto', density=True, alpha=0.6, color='g', label="Return Data")
