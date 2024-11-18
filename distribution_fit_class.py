@@ -178,7 +178,12 @@ class DistributionFit():
         mean = params["mean"]
         covariance = params["covariance"]
         samples = np.random.multivariate_normal(mean, covariance, size=n)
-        return samples
+        columns = self.get_data().columns
+        df_samples = pd.DataFrame(samples, columns=columns)
+        self.simulated_multivariated_return_norm = df_samples
+
+    def get_generated_multivariated_normal_samples(self):
+        return self.simulated_multivariated_return_norm
 
     def generate_multivariate_t_samples(self, n):
         params = self.multivariate_fitted_params["multivariate_t-student"]
@@ -190,7 +195,13 @@ class DistributionFit():
         g = np.random.gamma(df / 2., 2. / df, size=n)  # Gamma distribution samples for scaling
         z = np.random.multivariate_normal(np.zeros(d), covariance, size=n)  # Multivariate normal samples
         samples = mean + z / np.sqrt(g)[:, None]  # Scale the samples to create t-distribution samples
-        return samples
+
+        columns = self.get_data().columns
+        df_samples = pd.DataFrame(samples, columns=columns)
+        self.simulated_multivariated_return_t_student = df_samples
+
+    def get_generated_multivariated_t_samples(self):
+        return self.simulated_multivariated_return_t_student
 
     def plot_fitted_distributions(self, stock, stock_returns, normal_params, t_params):
         plt.figure(figsize=(10, 6))
