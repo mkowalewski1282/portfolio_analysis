@@ -84,6 +84,9 @@ class DistributionFit():
     def load_simulated_data_from_csv(self, file_path):
         self.simulated_data = pd.read_csv(file_path)
 
+    def set_simulated_data_from_df(self, df):
+        self.simulated_data = df
+
     # def calculate_returns_from_simulated_quantiles(self):
     #     output_norm = pd.DataFrame(columns=self.get_data().columns)
     #     output_t_student = pd.DataFrame(columns=self.get_data().columns)
