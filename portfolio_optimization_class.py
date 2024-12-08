@@ -30,6 +30,12 @@ class PortfolioOptimization:
         self.R = self.data.values                                                # Scenarios as rows, instruments as columns
         self.p = [1/self._number_of_scenarios] * self._number_of_scenarios  # Equal probabilities for each scenario
 
+    def load_simulated_data_from_df(self, df):
+        self.data = df
+        self._number_of_scenarios = self.data.shape[0]   # number of rows
+        self._number_of_instruments = self.data.shape[1] # number of columns
+        self.R = self.data.values                                                # Scenarios as rows, instruments as columns
+        self.p = [1/self._number_of_scenarios] * self._number_of_scenarios  # Equal probabilities for each scenario
 
     def set_data(self, new_data):
         self.data = new_data
