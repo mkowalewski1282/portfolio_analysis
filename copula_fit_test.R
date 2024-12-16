@@ -49,6 +49,7 @@ clayton_fit = fitCopula(clayton_cop, pseudo_obs, method="ml")   # maximum likeli
 
 # summary(fit)
 theta = coef(clayton_fit)
+theta = 0.001 # ONLY FOR THESIS
 theta = 0.2 # ONLY FOR THESIS
 theta = 0.5 # ONLY FOR THESIS
 theta = 5   # ONLY FOR THESIS
