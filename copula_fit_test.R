@@ -10,7 +10,7 @@ library(Matrix)
 # file = "data/positive_quarterly_return_rates.csv"
 # file = "data/random_data/n_stocks_per_sector.csv"
 setwd("C:/Studia/Studia/Studia/Praca inżynierska/portfolio_analysis")
-file = "data/random_data/1_stocks_per_sector.csv"
+file = "data/random_data/1_stocks_per_sector_1_iter.csv"
 return_rates = read.csv(file)
 stocks = colnames(return_rates)[2:ncol(return_rates)]
 
@@ -62,6 +62,7 @@ plot(simulated_data_clayton[,1], simulated_data_clayton[,2], main="Simulated Cla
      xlab="Stock 1", ylab="Stock 2")
 plot_density(simulated_data_clayton)
 #write.csv(simulated_data_clayton, file = "data/copulas_outputs/simulated_clayton_random_22_stocks.csv", row.names = FALSE)
+write.csv(simulated_data_clayton, file = "data/copulas_outputs/clayton_random_fixed_coefficient.csv", row.names = FALSE)
 
 
 ###### GAUSSIAN COPULA
